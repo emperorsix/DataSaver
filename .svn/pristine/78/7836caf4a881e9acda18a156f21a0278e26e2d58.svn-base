@@ -1,0 +1,15 @@
+package com.iweipeng.service;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import com.weiju.common.model.WJStockDB;
+
+public interface DataTableService {
+
+	List<WJStockDB> getDataByTableParams(String tableName, Date dbDate);
+
+	void createTableByParams(String tableName, Map<String, Object> columnMap);
+
+}

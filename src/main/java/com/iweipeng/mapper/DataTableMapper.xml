@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.iweipeng.mapper.DataTableMapper" >
+
+  <resultMap id="BaseResultMap" type="com.weiju.common.model.WJStockDB" >
+    <result column="jsonkey" property="jsonkey" jdbcType="VARCHAR" />
+    <result column="data" property="data" jdbcType="VARCHAR" />
+    <result column="createDate" property="createDate" jdbcType="TIMESTAMP" />
+    <result column="dbDate" property="dbDate" jdbcType="TIMESTAMP" />
+  </resultMap>
+  
+  <select id="findSourceTableData" resultMap="BaseResultMap" parameterType="map" statementType="STATEMENT">
+  <![CDATA[
+    select jsonkey, data, dbDate, createDate from ${tableName}
+    	where dbDate > ${dbDate}
+    	order by dbDate desc
+    ]]>
+  </select>
+  
+  <update id="createTable" parameterType="map" statementType="STATEMENT"> 
+	${createTableSQL}
+  </update>
+  
+  <update id="importDataToTable" parameterType="map" statementType="STATEMENT">
+  	LOAD DATA LOCAL INFILE ${filePath} REPLACE INTO TABLE ${tableName}
+	FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' 
+	LINES TERMINATED BY '\n'
+	<foreach collection="columns" index="index" item="item" open="(" separator="," close=")">
+  		${item}
+  	</foreach>
+  </update>
+  
+</mapper>

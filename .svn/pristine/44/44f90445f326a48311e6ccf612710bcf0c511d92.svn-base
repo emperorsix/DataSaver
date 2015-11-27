@@ -1,0 +1,10 @@
+package com.iweipeng.mapper;
+
+import java.util.List;
+
+import com.weiju.common.model.RedisMappingDetail;
+
+public interface RedisMappingDetailMapper extends BaseMapper<RedisMappingDetail, String> {
+
+	List<RedisMappingDetail> findRedisMappingDetailListByMapId(Integer mapId);
+}

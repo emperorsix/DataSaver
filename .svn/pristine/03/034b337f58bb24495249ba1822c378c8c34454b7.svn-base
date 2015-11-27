@@ -1,0 +1,129 @@
+package com.iweipeng;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.iweipeng.interpret.AbstractExpression;
+import com.iweipeng.interpret.AbstractExpression.ExpressionRule;
+import com.iweipeng.interpret.Context;
+import com.iweipeng.interpret.NonObjectListAttributeExpression;
+import com.iweipeng.interpret.ObjectListAttributeExpression;
+import com.iweipeng.interpret.SimpleAttributeExpression;
+import com.iweipeng.service.DataTableService;
+import com.iweipeng.service.RedisMappingService;
+import com.weiju.common.model.RedisDataMapping;
+import com.weiju.common.model.WJStockDB;
+
+
+@Component
+public class DataConverter {
+
+	private static Logger		logger	= Logger.getLogger(DataConverter.class);
+
+	@Autowired
+	private RedisMappingService	redisMappingService;
+
+	@Autowired
+	private DataTableService	dataTableService;
+
+	public void getRedisMappingListAfterDate(Date startDate, Date endDate) {
+
+		if (startDate == null) {
+			Calendar now = Calendar.getInstance();
+			now.set(Calendar.HOUR_OF_DAY, -24);
+			startDate = now.getTime();
+		}
+
+		if (endDate == null) {
+			Calendar now = Calendar.getInstance();
+			endDate = now.getTime();
+		}
+
+		// STEP1. 查询关系规则映射数据
+		List<RedisDataMapping> redisMappingList = redisMappingService.getRedisMappingListBetweenDate(startDate,
+				endDate);
+
+		Map<String, List<WJStockDB>> tableDataMap = new HashMap<String, List<WJStockDB>>();
+		//tableName=[{(columnName,columnValue), (columnName,columnValue), (columnName,columnValue)}, *, *] 
+		Map<String, Map<String, Object>> contextDataMap = new HashMap<String, Map<String, Object>>();
+		logger.info("开始解析......");
+		for (RedisDataMapping rdm : redisMappingList) {
+
+			// STEP2. 查询redis数据源表data数据，用于数据解析。
+			List<WJStockDB> stockDataList = getRedisTableData(tableDataMap, rdm.getUpdateDate(), rdm.getKeyType());
+
+			for (WJStockDB stockData : stockDataList) {
+
+				Context context = new Context();
+				context.setRule(rdm.getJsonPath());
+				context.setColumn(rdm.getDbCol());
+				context.setKeyTable(rdm.getKeyType());
+				context.setTargetTable(rdm.getDbTable());
+
+				String data = stockData.getData();
+				if (StringUtils.isNotEmpty(data)) {
+					context.setJsonData(data);
+					//STEP3. 按照规则开始解析json数据
+					convert(context);
+					logger.debug(rdm.getDbTable() + "" + context.getColumn() + " - " + context.getResult());
+					// 按照目的表创建数据map，保存数和对应表数据信息
+					if (contextDataMap.get(rdm.getDbTable()) == null) {
+						Map<String, Object> dataMap = new HashMap<String, Object>();
+						contextDataMap.put(rdm.getDbTable(), dataMap);
+					}
+					//
+					Map<String, Object> dataMap = contextDataMap.get(rdm.getDbTable());
+					dataMap.put(context.getColumn(), context.getResult());
+				} else {
+					continue;
+				}
+			}
+
+		}
+
+		Set<Entry<String, Map<String, Object>>> dataSet = contextDataMap.entrySet();
+		for (Entry<String, Map<String, Object>> item : dataSet) {
+			// Map<String, Object> value = item.getValue();
+			String table = item.getKey();
+			logger.debug(" =========== " + table);
+
+		}
+		// dataTableService.createTableByParams(context.getTargetTable(),
+		// context.getColumnMap());
+		logger.info("解析完成.");
+	}
+
+	private void convert(Context context) {
+		ExpressionRule expressionRule = context.getExpressionRule();
+		AbstractExpression expression = null;
+		if (expressionRule.name() == ExpressionRule.OBJECT_LIST.name()) {
+			expression = new ObjectListAttributeExpression();
+		} else if (expressionRule.name() == ExpressionRule.NON_OBJECT_LIST.name()) {
+			expression = new NonObjectListAttributeExpression();
+		} else {
+			expression = new SimpleAttributeExpression();
+		}
+		expression.interpret(context);
+
+	}
+
+	private List<WJStockDB> getRedisTableData(Map<String, List<WJStockDB>> tableDataMap, Date dbDate, String keyTable) {
+		List<WJStockDB> stockDBList = null;
+		if (tableDataMap.get(keyTable) == null) {
+			stockDBList = dataTableService.getDataByTableParams(keyTable, dbDate);
+			tableDataMap.put(keyTable, stockDBList);
+		}
+		stockDBList = tableDataMap.get(keyTable);
+		return stockDBList;
+	}
+}

@@ -1,0 +1,58 @@
+package com.iweipeng;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class Launcher {
+
+	private static Logger			logger		= LoggerFactory.getLogger(Launcher.class);
+
+	private static final String		CONFIG_FILE	= "applicationContext.xml";
+
+	public static Date[]			commandArgs;
+
+	public static boolean			isForce		= false;
+
+	public static final DateFormat	dateFormat	= new SimpleDateFormat("yyyy-MM-dd hh:mm:hh");
+
+	public static void startUp() {
+		@SuppressWarnings("resource")
+		ApplicationContext applicationContext = new ClassPathXmlApplicationContext(CONFIG_FILE);
+		logger.info("程序执行完成:" + applicationContext.getStartupDate());
+	}
+
+	public static void main(String[] args) {
+		if (args.length > 0) {
+			try {
+				commandArgs = new Date[2];
+				if (args.length == 1) {
+					commandArgs[0] = dateFormat.parse(args[0]);
+					commandArgs[1] = Calendar.getInstance().getTime();
+				} else if (args.length == 2) {
+					commandArgs[0] = dateFormat.parse(args[0]);
+					commandArgs[1] = dateFormat.parse(args[1]);
+				} else {
+					if (StringUtils.isNotEmpty(args[2]) && args[2].equalsIgnoreCase("yes")) {
+						isForce = true;
+					}
+				}
+			} catch (ParseException e) {
+				commandArgs = null;
+				logger.error("无效的输入日期参数错误：" + e.getMessage());
+			}
+		}
+		logger.info("你输入的参数是：" + (commandArgs.length > 0 ? commandArgs : "未输入参数"));
+		logger.info("数据解析转换程序开始执行...");
+		Launcher.startUp();
+	}
+
+}

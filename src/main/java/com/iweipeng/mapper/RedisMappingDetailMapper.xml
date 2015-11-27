@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.iweipeng.mapper.RedisMappingDetailMapper">
+
+	<resultMap id="BaseResultMap" type="com.weiju.common.model.RedisMappingDetail">
+		<result column="mapId" property="mapId" jdbcType="INTEGER" />
+		<result column="dbCol" property="dbCol" jdbcType="VARCHAR" />
+		<result column="jsonPath" property="jsonPath" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<sql id="Base_Column_List">
+		mapId, dbCol, jsonPath
+	</sql>
+
+	<select id="findRedisDataRuleList" resultMap="BaseResultMap" parameterType="map">
+		select <include refid="Base_Column_List" /> from redis_mapping_detail where mapId = #{mapId}
+	</select>
+
+
+</mapper>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.iweipeng.mapper.RedisMappingMapper" >
+
+  <resultMap id="BaseResultMap" type="com.weiju.common.model.RedisDataMapping" >
+    <result column="mapId" property="mapId" jdbcType="INTEGER" />
+    <result column="keyType" property="keyType" jdbcType="VARCHAR" />
+    <result column="dbTable" property="dbTable" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="INTEGER" />
+    <result column="dbCol" property="dbCol" jdbcType="VARCHAR" />
+    <result column="jsonPath" property="jsonPath" jdbcType="VARCHAR" />
+    <result column="createDate" property="createDate" jdbcType="TIMESTAMP" />
+    <result column="updateDate" property="updateDate" jdbcType="TIMESTAMP" />
+  </resultMap>
+  
+  <resultMap id="BaseMap" type="com.weiju.common.model.RedisMapping" >
+    <result column="mapId" property="mapId" jdbcType="INTEGER" />
+    <result column="keyType" property="keyType" jdbcType="VARCHAR" />
+    <result column="dbTable" property="dbTable" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="INTEGER" />
+    <result column="createDate" property="createDate" jdbcType="TIMESTAMP" />
+    <result column="updateDate" property="updateDate" jdbcType="TIMESTAMP" />
+  </resultMap>
+  
+  <sql id="Base_Column_List" >
+    mapId, keyType, dbTable, status, updateDate, createDate 
+  </sql>
+  
+  <sql id="Base_Column_Relation_List">
+  	rm.mapId, rm.keyType, rm.dbTable, rm.status, rm.updateDate, rm.createDate, rmd.dbCol, rmd.jsonPath 
+  </sql>
+  
+  <select id="findRedisDataBetweenDate" resultMap="BaseMap" parameterType="map" >
+    select 
+    	<include refid="Base_Column_List" />
+    from redis_mapping rm 
+	    <where>
+	    rm.updateDate between
+	    <if test="startDate != null">
+	         #{startDate}
+	    </if> 
+	    and
+	    <if test="endDate != null">
+	         #{endDate}
+	    </if>
+	    <if test="status != null or status == 0">
+	    	and status = #{status}
+	    </if>
+	  </where>
+	  order by rm.mapId
+  </select>
+  
+  <select id="findRedisDataMappingListBetweenDate" resultMap="BaseResultMap" parameterType="map" >
+    select 
+    	<include refid="Base_Column_Relation_List" />
+    from redis_mapping rm, redis_mapping_detail rmd 
+	    <where>
+	    rm.mapId = rmd.mapId
+	    and
+	    rm.updateDate between
+	    <if test="startDate != null">
+	         #{startDate}
+	    </if> 
+	    and
+	    <if test="endDate != null">
+	         #{endDate}
+	    </if>
+	  </where>
+	order by rm.createDate
+  </select>
+  
+  <update id="updateUpdateDateByMapId" parameterType="map">
+	  update redis_mapping
+	    <set>
+	      <if test="updateDate != null">updateDate=#{updateDate},</if>
+	      <if test="(status != null or status == 0)">status=#{status}</if>
+	    </set>
+	  where mapId=#{mapId}
+  </update>
+  
+</mapper>

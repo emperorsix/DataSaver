@@ -1,0 +1,15 @@
+package com.iweipeng.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import com.weiju.common.model.WJStockDB;
+
+public interface DataTableMapper extends BaseMapper<WJStockDB, String> {
+
+	public List<WJStockDB> findSourceTableData(Map<String, Object> params);
+
+	public void createTable(Map<String, Object> params);
+
+	public void importDataToTable(Map<String, Object> params);
+}

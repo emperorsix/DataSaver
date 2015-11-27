@@ -1,0 +1,41 @@
+package com.iweipeng.service.impl;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.time.DateFormatUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.iweipeng.mapper.DataTableMapper;
+import com.iweipeng.service.DataTableService;
+import com.weiju.common.model.WJStockDB;
+
+@Service
+public class DataTableServiceImpl implements DataTableService {
+
+	@Autowired
+	private DataTableMapper	dataTableMapper;
+
+	@Override
+	public List<WJStockDB> getDataByTableParams(String tableName, Date dbDate) {
+
+		Map<String, Object> params = new HashMap<String, Object>();
+
+		params.put("tableName", tableName);
+		params.put("dbDate", "'" + DateFormatUtils.format(dbDate, "yyyy-MM-dd hh:mm:sss") + "'");
+		return dataTableMapper.findSourceTableData(params);
+	}
+
+	@Override
+	public void createTableByParams(String tableName, Map<String, Object> columnMap) {
+		
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("createTableSQL", "");
+		dataTableMapper.createTable(params);
+		
+	}
+
+}

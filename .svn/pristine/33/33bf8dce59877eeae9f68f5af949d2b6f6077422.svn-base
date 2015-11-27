@@ -1,0 +1,15 @@
+jdbc.driverClassName=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://192.168.1.111:3306/WeiJu_1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull
+jdbc.username=root
+jdbc.password=123456
+
+#jdbc.url=jdbc:mysql://182.254.128.241:5144/WeiJu_1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull
+#jdbc.username=cdb_outerroot
+#jdbc.password=10881902qwe
+
+jdbc.maxActive=30
+jdbc.maxIdle=20
+jdbc.minIdle=1
+jdbc.initialSize=1
+jdbc.maxWait=60000
+jdbc.validationQuery=select 1

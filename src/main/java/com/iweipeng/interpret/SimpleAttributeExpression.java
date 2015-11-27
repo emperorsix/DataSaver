@@ -1,0 +1,56 @@
+package com.iweipeng.interpret;
+
+import java.util.Collections;
+import java.util.Map;
+
+import org.springframework.util.StringUtils;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
+
+/**
+ * 解析简单属性
+ * 
+ * {attr: value, attr: value}
+ * 
+ * @author kevin.pei
+ *
+ */
+public class SimpleAttributeExpression extends AbstractExpression {
+
+	@Override
+	public void interpret(Context context) {
+
+		String jsonData = context.getJsonData();
+		String rule = context.getRule();
+		if (StringUtils.isEmpty(rule) || StringUtils.isEmpty(jsonData)) {
+			// throw new IllegalArgumentException("Invalid parameters.");
+			logger.warn("错误的解析规则：" + rule + " from table:" + context.getKeyTable() + " to table:" + context.getTargetTable());
+			return;
+		}
+
+		// String keyTable = context.getKeyTable();
+
+		Map<String, Object> dataMap = JSON.parseObject(jsonData, new TypeReference<Map<String, Object>>() {
+		});
+
+		String[] segments = rule.split("/");
+		// attrA or objectA/attrB
+		if (segments.length > 1) {
+			for (int i = 0; i < segments.length; i++) {
+				if (i < segments.length - 1) {
+					if (dataMap.get(segments[i]) != null) {
+						dataMap = JSON.parseObject(dataMap.get(segments[i]).toString());
+					}
+				}
+			}
+		}
+		if (dataMap.size() > 0) {
+			String value = String.valueOf(dataMap.get(segments[segments.length - 1]));
+			context.setResult(Collections.singletonList(value));
+		} else {
+			logger.warn("无法按照规则得到合适的数据 " + rule + " from table:" + context.getKeyTable() + " to table:" + context.getTargetTable());
+		}
+	}
+
+}

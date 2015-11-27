@@ -1,0 +1,118 @@
+package com.iweipeng;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.iweipeng.interpret.AbstractExpression;
+import com.iweipeng.interpret.AbstractExpression.ExpressionRule;
+import com.iweipeng.interpret.Context;
+import com.iweipeng.interpret.ListAttributeExpression;
+import com.iweipeng.interpret.ObjectAttributeExpression;
+import com.iweipeng.interpret.SimpleAttributeExpression;
+import com.iweipeng.service.DataTableService;
+import com.iweipeng.service.RedisMappingDetailService;
+import com.iweipeng.service.RedisMappingService;
+import com.weiju.common.model.RedisDataMapping;
+import com.weiju.common.model.WJStockDB;
+
+@Component
+public class DataConverter {
+
+	private static Logger				logger	= Logger.getLogger(DataConverter.class);
+
+	@Autowired
+	private RedisMappingService			redisMappingService;
+
+	@Autowired
+	private RedisMappingDetailService	redisMappingDetailService;
+
+	@Autowired
+	private DataTableService			dataTableService;
+
+	public void getRedisMappingListAfterDate(Date startDate, Date endDate) {
+
+		if (startDate == null) {
+			Calendar now = Calendar.getInstance();
+			now.set(Calendar.HOUR_OF_DAY, -24);
+			startDate = now.getTime();
+		}
+
+		if (endDate == null) {
+			Calendar now = Calendar.getInstance();
+			endDate = now.getTime();
+		}
+
+		List<RedisDataMapping> redisMappingList = redisMappingService.getRedisMappingListBetweenDate(startDate, endDate);
+
+		Map<String, List<WJStockDB>> tableDataMap = new HashMap<String, List<WJStockDB>>();
+		Map<String, Map<String, Object>> contextDataMap = new HashMap<String, Map<String, Object>>();
+		logger.info("开始解析......");
+		for (RedisDataMapping rdm : redisMappingList) {
+
+			//保存已查询过的数据表data数据
+			List<WJStockDB> stockDataList = getRedisTableData(tableDataMap, rdm.getUpdateDate(), rdm.getKeyType());
+			
+			//统计所有规则
+
+			for (WJStockDB stockData : stockDataList) {
+				
+				Context context = new Context();
+				context.setRule(rdm.getJsonPath());
+				context.setColumn(rdm.getDbCol());
+				context.setKeyTable(rdm.getKeyType());
+				context.setTargetTable(rdm.getDbTable());
+
+				String data = stockData.getData();
+				if (StringUtils.isNotEmpty(data)) {
+					context.setJsonData(data);
+					// 开始解析json数据
+					convert(context);
+					
+					
+					
+				} else {
+					continue;
+				}
+			}
+			
+			
+
+		}
+
+		//dataTableService.createTableByParams(context.getTargetTable(), context.getColumnMap());
+		logger.info("解析完成.");
+	}
+
+	private void convert(Context context) {
+		ExpressionRule expressionRule = context.getExpressionRule();
+		AbstractExpression expression = null;
+		if (expressionRule.name() == ExpressionRule.LIST.name()) {
+			expression = new ListAttributeExpression();
+		} else if (expressionRule.name() == ExpressionRule.OBJECT.name()) {
+			expression = new ObjectAttributeExpression();
+		} else {
+			expression = new SimpleAttributeExpression();
+		}
+		expression.interpret(context);
+
+	}
+
+	private List<WJStockDB> getRedisTableData(Map<String, List<WJStockDB>> tableDataMap, Date dbDate, String keyTable) {
+		List<WJStockDB> stockDBList = null;
+		if (tableDataMap.get(keyTable) == null) {
+			stockDBList = dataTableService.getDataByTableParams(keyTable, dbDate);
+			tableDataMap.put(keyTable, stockDBList);
+		}
+		stockDBList = tableDataMap.get(keyTable);
+		return stockDBList;
+	}
+}

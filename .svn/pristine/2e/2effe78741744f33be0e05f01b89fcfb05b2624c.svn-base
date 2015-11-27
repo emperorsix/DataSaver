@@ -1,0 +1,19 @@
+package com.iweipeng.service;
+
+import java.util.Date;
+import java.util.List;
+
+import com.weiju.common.model.RedisDataMapping;
+import com.weiju.common.model.RedisMapping;
+
+public interface RedisMappingService {
+
+	List<RedisMapping> getRedisMappingAmongDate(Date startDate, Date endDate);
+
+	List<RedisMapping> getRedisMappingListBeforeDate(Date endDate);
+
+	List<RedisMapping> getRedisMappingListAfterDate(Date startDate);
+
+	List<RedisDataMapping> getRedisMappingListBetweenDate(Date startDate, Date endDate);
+	
+}

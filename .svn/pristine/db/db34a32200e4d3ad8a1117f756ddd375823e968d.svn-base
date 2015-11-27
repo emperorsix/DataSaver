@@ -1,0 +1,13 @@
+package com.iweipeng.job;
+
+import org.apache.log4j.Logger;
+
+public class DataSaverJob {
+
+	private Logger		logger	= Logger.getLogger(this.getClass());
+	
+	public void work() {
+		logger.info("I am running...");
+	}
+
+}

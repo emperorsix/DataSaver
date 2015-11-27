@@ -1,0 +1,25 @@
+package com.iweipeng.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import com.weiju.common.model.RedisDataMapping;
+import com.weiju.common.model.RedisMapping;
+
+public interface RedisMappingMapper extends BaseMapper<RedisMapping, String> {
+
+	List<RedisDataMapping> findRedisDataMappingListBetweenDate(Map<String, Object> params);
+
+	RedisMapping selectByPrimaryKey(String categoryId);
+
+	int updateByPrimaryKeySelective(RedisMapping record);
+
+	int updateByPrimaryKey(RedisMapping record);
+
+	List<RedisMapping> findRedisDataList();
+
+	List<RedisMapping> findRedisDataBetweenDate(Map<String, Object> params);
+	
+	void updateUpdateDateByMapId(Map<String, Object> params);
+
+}

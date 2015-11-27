@@ -1,0 +1,29 @@
+package com.iweipeng.interpret;
+
+import java.util.Map;
+
+import org.springframework.util.StringUtils;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
+
+public class SimpleAttributeExpression extends AbstractExpression {
+
+	@Override
+	public void interpret(Context context) {
+
+		String jsonData = context.getJsonData();
+		String rule = context.getRule();
+		if (StringUtils.isEmpty(rule) || StringUtils.isEmpty(jsonData)) {
+			// throw new IllegalArgumentException("Invalid parameters.");
+			return;
+		}
+
+		// String keyTable = context.getKeyTable();
+
+		Map<String, Object> dataMap = JSON.parseObject(jsonData, new TypeReference<Map<String, Object>>() {});
+		String value = (String) dataMap.get(rule);
+		context.setResult(value);
+	}
+
+}

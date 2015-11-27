@@ -1,0 +1,127 @@
+package com.iweipeng.runner;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * 
+ * @author kevin.pei
+ *
+ */
+public class TaskRunner implements Runnable {
+
+	private static Logger								logger		= LoggerFactory.getLogger(TaskRunner.class);
+
+	private static final String							filePath	= "/redisTempData/";
+
+	private String										mapId;
+
+	/**
+	 * {tableName=columns}
+	 */
+	private Entry<String, Map<String, List<String>>>	tableColumnMap;
+
+	public TaskRunner(Entry<String, Map<String, List<String>>> item, String mapId) {
+		this.tableColumnMap = item;
+		this.mapId = mapId;
+	}
+
+	@Override
+	public void run() {
+
+		// tableName_{mapId}
+		String tableName = tableColumnMap.getKey();
+
+		Map<String, List<String>> columnDataMap = tableColumnMap.getValue();
+		// 列数
+		int columnLength = columnDataMap.size();
+
+		int index = 0;
+		StringBuffer tableData = new StringBuffer();
+		// LOAD DATA INFILE 'persondata.txt' INTO TABLE persondata
+		// (col1,col2,...);
+
+		//
+		Set<Entry<String, List<String>>> columnMap = columnDataMap.entrySet();
+
+		List<String[]> rowList = new ArrayList<String[]>();
+		int maxSize = 0;
+		for (Entry<String, List<String>> columns : columnMap) {
+			List<String> values = columns.getValue();
+			if (maxSize < values.size()) {
+				maxSize = values.size();
+			}
+		}
+
+		for (int i = 0; i < maxSize; i++) {
+			rowList.add(new String[columnLength]);
+		}
+
+		int columnIndex = 0;
+		for (Entry<String, List<String>> columns : columnMap) {
+			//
+			List<String> columnValues = columns.getValue();
+
+			String lastValue = null;
+			int rowIndex = 0;
+			for (int i = 0; i < maxSize; i++) {
+				logger.debug("maxSize: " + maxSize + " rowIndex: " + rowIndex + " columnIndex: " + columnIndex);
+				String[] row = rowList.get(rowIndex++);
+				if (columnValues.size() <= i) {
+					row[columnIndex] = lastValue;
+				} else {
+					row[columnIndex] = columnValues.get(i);
+					lastValue = columnValues.get(i);
+				}
+			}
+			columnIndex++;
+		}
+
+		for (String[] row : rowList) {
+			logger.debug("Each row: -------------- " + row[0] + " " + row[1]);
+		}
+
+		// try {
+		// FileOutputStream output = new FileOutputStream(filePath + tableName);
+		// ByteBuffer buffer = ByteBuffer.allocate(1024);
+		//
+		// // 准备文件读取的管道 FileChannel inFc = inf.getChannel();
+		// FileChannel outFc = output.getChannel();
+		// Charset charSet = Charset.forName("utf-8");
+		//
+		// // 进行编码解码
+		// CharsetDecoder decoder = charSet.newDecoder();
+		// CharsetEncoder encoder = charSet.newEncoder();
+		//
+		// while (true) {
+		// // 准备向Buffer中写入数据-->相当于点燃烟丝，完事具备只欠东风
+		// buffer.clear();
+		// // 进行字符编码 -->相当于水的过滤作用
+		// CharBuffer cb = decoder.decode(buffer);
+		// ByteBuffer bb = encoder.encode(cb);
+		//
+		// // 数据经过编码以后暂存缓冲区-->相当于经过水过滤后的烟暂停在水斗中
+		// // int t = inFc.read(bb);
+		// // if (t == -1) {
+		// // break;
+		// // }
+		// bb.flip();
+		// // 将字节码写入目标文件-->相当于烟已经进入到嘴里
+		// outFc.write(bb);
+		// }
+		//
+		// } catch (IOException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+
+		// 修改数据表上次更新时间。mapId - updatedate
+	}
+
+}

@@ -1,0 +1,47 @@
+package com.iweipeng.interpret;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.util.StringUtils;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+
+public class ObjectListAttributeExpression extends AbstractExpression {
+
+	@Override
+	public void interpret(Context context) {
+		String jsonData = context.getJsonData();
+		String rule = context.getRule();
+		if (StringUtils.isEmpty(rule) || StringUtils.isEmpty(jsonData)) {
+			// throw new IllegalArgumentException("Invalid parameters.");
+			return;
+		}
+
+		JSONObject rootData = JSON.parseObject(jsonData);
+
+		String[] segments = rule.substring(1).split("/");
+
+		if (rootData.get(segments[0]) != null) {
+			List<String> results = new ArrayList<String>();
+			JSONArray arrayData = JSON.parseArray(rootData.get(segments[0]).toString());
+			for (Object item : arrayData) {
+				String value = this.digout(item, segments, 1);
+				results.add(value);
+			}
+			context.setResult(results);
+		}
+	}
+
+	protected String digout(Object item, String[] segments, int start) {
+		JSONObject itemData = JSON.parseObject(item.toString());
+		//
+		if (start < segments.length - 1) {
+			return this.digout(itemData.get(segments[start]).toString(), segments, start + 1);
+		}
+		return itemData.getString(segments[start]);
+	}
+
+}

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans default-lazy-init="true"
+	xmlns="http://www.springframework.org/schema/beans" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:beans="http://www.springframework.org/schema/beans"
+	xsi:schemaLocation="  
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+       http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx-4.2.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-4.2.xsd">
+
+	<context:component-scan base-package="com.iweipeng" />
+
+	<!-- 引入jdbc配置文件 -->
+	<context:property-placeholder location="classpath:jdbc.properties" />
+	
+	<!-- wpstock数据源 -->
+	<bean id="dataSourceWpstock" class="com.mchange.v2.c3p0.ComboPooledDataSource">  
+	    <property name="driverClass" value="${jdbc.driverClassName}" />  
+	    <property name="jdbcUrl" value="${jdbc.wpstock.url}" />  
+	    <property name="user" value="${jdbc.wpstock.user}" />  
+	    <property name="password" value="${jdbc.wpstock.password}" />  
+	    <property name="autoCommitOnClose" value="true" />  
+	    <property name="checkoutTimeout" value="${cpool.checkoutTimeout}" />  
+	    <property name="initialPoolSize" value="${cpool.initialPoolSize}" />  
+	    <property name="minPoolSize" value="${cpool.minPoolSize}" />  
+	    <property name="maxPoolSize" value="${cpool.maxPoolSize}" />  
+	    <property name="maxIdleTime" value="${cpool.maxIdleTime}" />  
+	    <property name="acquireIncrement" value="${cpool.acquireIncrement}" />  
+	</bean>
+
+	<!-- weiju1数据源 -->
+	<bean id="dataSourceWeiJu1" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driverClassName}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<!-- 初始化连接大小 -->
+		<property name="initialSize" value="${jdbc.initialSize}"></property>
+		<!-- 连接池最大数量 -->
+		<property name="maxActive" value="${jdbc.maxActive}"></property>
+		<!-- 连接池最大空闲 -->
+		<property name="maxIdle" value="${jdbc.maxIdle}"></property>
+		<!-- 连接池最小空闲 -->
+		<property name="minIdle" value="${jdbc.minIdle}"></property>
+		<!-- 获取连接最大等待时间 -->
+		<property name="maxWait" value="${jdbc.maxWait}"></property>
+		<property name="validationQuery" value="${jdbc.validationQuery}"></property>
+	</bean>
+	
+	<!-- 动态数据配置 -->
+	<bean id="dynamicDataSource" class="com.iweipeng.datasource.DynamicDataSource" >  
+	    <!-- 通过key-value的形式来关联数据源 -->  
+	    <property name="targetDataSources">  
+	        <map>  
+	            <entry value-ref="dataSourceWeiJu1" key="dataSourceWeiJu1"></entry>  
+	            <entry value-ref="dataSourceWpstock" key="dataSourceWpstock"></entry>  
+	        </map>  
+	    </property>
+	    <property name="defaultTargetDataSource" ref="dataSourceWpstock" />  
+	</bean>
+	
+	<!-- 配置数据库注解AOP -->
+    <aop:aspectj-autoproxy></aop:aspectj-autoproxy>
+    <beans:bean id="dataSourceAspect" class="com.iweipeng.datasource.DataSourceAspectMiddleware" />
+    <aop:config>
+        <aop:aspect id="dataSourceAspect" ref="dataSourceAspect">
+            <aop:pointcut id="tx" expression="execution(* com.iweipeng.mapper.*.*(..))"/>
+            <aop:before pointcut-ref="tx" method="before"/>
+        </aop:aspect>
+    </aop:config>
+
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dynamicDataSource" />
+	</bean>
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dynamicDataSource" />
+		<!-- <property name="configLocation" value="classpath:mybatis.xml"></property> -->
+		<property name="mapperLocations" value="classpath*:com/iweipeng/mapper/*.xml" />
+		<property name="typeAliasesPackage" value="com.weiju.common.model" />
+	</bean>
+
+	<!-- 可通过注解控制事务 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+	<!-- Mapper接口所在包名，Spring会自动查找其下的Mapper -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.iweipeng.mapper" />
+		<property name="markerInterface" value="com.iweipeng.mapper.BaseMapper" />
+		<!-- <property name="annotationClass" value="com.iweipeng.mapper.Mapper" /> -->
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+		<!-- <property name="sqlSessionTemplateBeanName" value="sqlSessionTemplateSimple" /> -->
+	</bean>
+
+	<!-- 配置SqlSessionTemplate -->
+	<!--通过模板定制mybatis的行为 -->
+	<bean id="sqlSessionTemplateSimple" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sqlSessionFactory" />
+		<!--更新采用单个模式 -->
+		<constructor-arg index="1" value="SIMPLE" />
+	</bean>
+
+	<!--通过模板定制mybatis的行为 -->
+	<bean id="sqlSessionTemplateBatch" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sqlSessionFactory" />
+		<!--更新采用批量模式 -->
+		<constructor-arg index="1" value="BATCH" />
+	</bean>
+
+	<!-- 拦截器方式配置事物 -->
+	<tx:advice id="transactionAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="append*" propagation="REQUIRED" />
+			<tx:method name="insert*" propagation="REQUIRED" />
+			<tx:method name="save*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="modify*" propagation="REQUIRED" />
+			<tx:method name="edit*" propagation="REQUIRED" />
+			<tx:method name="delete*" propagation="REQUIRED" />
+			<tx:method name="remove*" propagation="REQUIRED" />
+
+			<tx:method name="get*" propagation="SUPPORTS" />
+			<tx:method name="find*" propagation="SUPPORTS" />
+
+			<tx:method name="*" propagation="SUPPORTS" />
+		</tx:attributes>
+	</tx:advice>
+
+	<aop:config>
+		<aop:pointcut id="transactionPointcut"
+			expression="execution(* com.iweipeng.service..*Impl.*(..))" />
+		<aop:advisor pointcut-ref="transactionPointcut"
+			advice-ref="transactionAdvice" />
+	</aop:config>
+
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<constructor-arg>
+			<ref bean="dynamicDataSource" />
+		</constructor-arg>
+	</bean>
+
+	<import resource="scheduler.xml" />
+
+</beans>

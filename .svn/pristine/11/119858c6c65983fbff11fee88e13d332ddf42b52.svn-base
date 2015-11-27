@@ -1,0 +1,26 @@
+package com.iweipeng;
+
+import java.util.Map;
+
+public class DataTableModel {
+
+	private String tableName;
+
+	private Map<String, Object> columnMap;
+
+	public String getTableName() {
+		return tableName;
+	}
+
+	public void setTableName(String tableName) {
+		this.tableName = tableName;
+	}
+
+	public Map<String, Object> getColumnMap() {
+		return columnMap;
+	}
+
+	public void setColumnMap(Map<String, Object> columnMap) {
+		this.columnMap = columnMap;
+	}
+}

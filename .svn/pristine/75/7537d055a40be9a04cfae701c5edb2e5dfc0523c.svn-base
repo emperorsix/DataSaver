@@ -1,0 +1,29 @@
+package com.iweipeng;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class Launcher {
+
+	private static Logger		logger		= LoggerFactory.getLogger(Launcher.class);
+
+	private static final String	CONFIG_FILE	= "applicationContext.xml";
+
+	public static String[]		commandArgs;
+
+	public static void startUp() {
+		@SuppressWarnings("resource")
+		ApplicationContext applicationContext = new ClassPathXmlApplicationContext(CONFIG_FILE);
+		logger.info("程序执行完成:" + applicationContext.getStartupDate());
+	}
+
+	public static void main(String[] args) {
+		commandArgs = args;
+		logger.info("你输入的参数是：" + commandArgs);
+		Launcher.startUp();
+		logger.debug("完成初始化.");
+	}
+
+}

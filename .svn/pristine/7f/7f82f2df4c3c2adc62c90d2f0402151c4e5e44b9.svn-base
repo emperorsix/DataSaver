@@ -1,0 +1,12 @@
+package com.iweipeng.interpret;
+
+
+public class ListAttributeExpression extends AbstractExpression {
+
+	@Override
+	public void interpret(Context context) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

@@ -1,0 +1,9 @@
+package com.iweipeng.job;
+
+public class DataSaverJob {
+
+	public void work() {
+		
+	}
+
+}

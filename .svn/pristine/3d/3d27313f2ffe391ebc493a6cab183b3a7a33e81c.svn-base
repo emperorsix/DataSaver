@@ -1,0 +1,62 @@
+package com.iweipeng.service.impl;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.iweipeng.mapper.RedisMappingMapper;
+import com.iweipeng.service.RedisMappingService;
+import com.iweipeng.utility.AppParams;
+import com.weiju.common.model.RedisDataMapping;
+import com.weiju.common.model.RedisMapping;
+
+@Service("redisMappingService")
+public class RedisMappingServiceImpl implements RedisMappingService {
+
+	private static Logger		logger	= Logger.getLogger(RedisMappingServiceImpl.class);
+
+	@Autowired
+	private RedisMappingMapper	redisMappingMapper;
+
+	@Override
+	public List<RedisMapping> getRedisMappingAmongDate(Date startDate, Date endDate, boolean isForce) {
+
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		if (isForce) {
+			// 在传入日期范围内，查询所有数据，包括已经转换过的数据。status=1 and status=0
+			//params.put("isForce", AppParams.ConvertStatus.YES.getValue());
+		} else {
+			// 在传入日期范围内，仅仅查询所有为转换过的数据。status=0
+			params.put("isForce", AppParams.ConvertStatus.NO.getValue());
+		}
+		return redisMappingMapper.findRedisDataBetweenDate(params);
+	}
+
+	@Override
+	public List<RedisDataMapping> getRedisMappingListBetweenDate(Date startDate, Date endDate) {
+		logger.debug("开始查询RedisMapping数据，查询条件为：" + startDate + " ~ " + endDate);
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		List<RedisDataMapping> redisDataMappingList = redisMappingMapper.findRedisDataMappingListBetweenDate(params);
+		return redisDataMappingList;
+	}
+
+	@Override
+	public void updateUpdateDateByMapId(Integer mapId, Date updateDate) {
+		logger.debug("修改redis_mapping表的更新时间，作为上一次的数据提取时间。");
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("mapId", mapId);
+		params.put("updateDate", updateDate);
+		params.put("status", AppParams.ConvertStatus.YES.getValue());
+		redisMappingMapper.updateUpdateDateByMapId(params);
+	}
+
+}

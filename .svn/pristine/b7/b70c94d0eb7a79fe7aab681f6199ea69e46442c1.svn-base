@@ -1,0 +1,26 @@
+package com.iweipeng;
+
+import org.apache.log4j.Logger;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class Launcher {
+
+	private static Logger		logger		= Logger.getLogger(Launcher.class);
+
+	private static final String	CONFIG_FILE	= "applicationContext.xml";
+
+	public static void startUp() {
+
+		@SuppressWarnings("resource")
+		ApplicationContext applicationContext = new ClassPathXmlApplicationContext(CONFIG_FILE);
+
+		logger.info("加载spring配置完成." + applicationContext.getStartupDate());
+	}
+	
+	public static void main(String[] args) {
+		Launcher.startUp();
+		logger.info("完成初始化.");
+	}
+
+}

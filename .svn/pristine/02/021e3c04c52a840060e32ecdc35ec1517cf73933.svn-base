@@ -1,0 +1,114 @@
+package com.iweipeng.interpret;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.util.StringUtils;
+
+import com.iweipeng.interpret.AbstractExpression.ExpressionRule;
+
+public class Context {
+
+	private static final String	HASH					= "#";
+
+	private static final String	RIGHT_SQUARE_BRACKETS	= "]";
+
+	private String				jsonData;
+
+	/**
+	 * The <tt>jsonPath</tt> value of redis data.
+	 */
+	private String				rule;
+
+	/**
+	 * The <tt>dbCol</tt> value of redis mapping detail
+	 */
+	private String				column;
+
+	/**
+	 * The <tt>keyType</tt> of redis mapping data
+	 */
+	private String				keyTable;
+
+	/**
+	 * The target table value from <tt>dbTable</tt> of redis mapping.
+	 */
+	private String				targetTable;
+
+	/**
+	 * 字段－数值 映射
+	 */
+	private Map<String, Object>	columnMap;
+
+	private List<String>		result;
+
+	public String getJsonData() {
+		return jsonData;
+	}
+
+	public void setJsonData(String jsonData) {
+		this.jsonData = jsonData;
+	}
+
+	public String getRule() {
+		return rule;
+	}
+
+	public void setRule(String rule) {
+		this.rule = rule;
+	}
+
+	public ExpressionRule getExpressionRule() {
+		if (StringUtils.isEmpty(rule)) {
+			throw new IllegalArgumentException("Invalid rule parameter.");
+		}
+		if (rule.startsWith(HASH)) {
+			return ExpressionRule.OBJECT_LIST;
+		} else if (!rule.startsWith(HASH) && (rule.endsWith(RIGHT_SQUARE_BRACKETS) || rule.indexOf("/") > -1)) {
+			return ExpressionRule.NON_OBJECT_LIST;
+		} else {
+			return ExpressionRule.SIMPLE;
+		}
+	}
+
+	public String getKeyTable() {
+		return keyTable;
+	}
+
+	public void setKeyTable(String keyTable) {
+		this.keyTable = keyTable;
+	}
+
+	public String getTargetTable() {
+		return targetTable;
+	}
+
+	public void setTargetTable(String targetTable) {
+		this.targetTable = targetTable;
+	}
+
+	public String getColumn() {
+		return column;
+	}
+
+	public void setColumn(String column) {
+		this.column = column;
+	}
+
+	public List<String> getResult() {
+		return result;
+	}
+
+	public void setResult(List<String> result) {
+		this.result = result;
+	}
+
+	public Map<String, Object> getColumnMap() {
+		return columnMap;
+	}
+
+	public void setColumnMap(Map<String, Object> columnMap) {
+		this.columnMap = columnMap;
+	}
+
+}

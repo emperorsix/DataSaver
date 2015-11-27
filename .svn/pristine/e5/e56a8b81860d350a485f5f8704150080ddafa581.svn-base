@@ -1,0 +1,16 @@
+package com.iweipeng.sqlprovider;
+
+import static org.apache.ibatis.jdbc.SqlBuilder.BEGIN;
+import static org.apache.ibatis.jdbc.SqlBuilder.SQL;
+
+import java.util.Map;
+
+public class DataTableSQLProvider {
+
+	public String createTable(Map<String, Object> params) {
+		
+		BEGIN();
+		
+		return SQL();
+	}
+}

@@ -1,0 +1,21 @@
+jdbc.driverClassName=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/WeiJu_1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull
+jdbc.username=root
+jdbc.password=root
+jdbc.maxActive=30
+jdbc.maxIdle=20
+jdbc.minIdle=1
+jdbc.initialSize=1
+jdbc.maxWait=60000
+jdbc.testOnBorrow=true
+jdbc.testOnReturn=true
+jdbc.testWhileIdle=true
+jdbc.validationQuery=select 1
+#\u6253\u5f00removeAbandoned\u529f\u80fd
+jdbc.removeAbandoned=true
+jdbc.removeAbandonedTimeout=1800
+jdbc.logAbandoned=true
+#\u914d\u7f6e\u95f4\u9694\u591a\u4e45\u624d\u8fdb\u884c\u4e00\u6b21\u68c0\u6d4b\uff0c\u68c0\u6d4b\u9700\u8981\u5173\u95ed\u7684\u7a7a\u95f2\u8fde\u63a5\uff0c\u5355\u4f4d\u662f\u6beb\u79d2
+jdbc.timeBetweenEvictionRunsMillis=6000
+#\u914d\u7f6e\u4e00\u4e2a\u8fde\u63a5\u5728\u6c60\u4e2d\u6700\u5c0f\u751f\u5b58\u7684\u65f6\u95f4\uff0c\u5355\u4f4d\u662f\u6beb\u79d2
+jdbc.minEvictableIdleTimeMillis=6000

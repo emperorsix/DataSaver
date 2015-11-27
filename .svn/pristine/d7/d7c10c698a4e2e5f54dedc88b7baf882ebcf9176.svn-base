@@ -1,0 +1,39 @@
+package com.iweipeng;
+
+import java.util.Calendar;
+import java.util.Date;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.stereotype.Component;
+
+/**
+ * ContextClosedEvent ContextRefreshedEvent ContextStartedEvent
+ * ContextStoppedEvent RequestHandleEvent
+ * 
+ * @author qingfengpei
+ *
+ */
+
+@Component
+public class AppContainerListener implements ApplicationListener<ContextRefreshedEvent> {
+
+	private static Logger	logger	= Logger.getLogger(AppContainerListener.class);
+
+	@Autowired
+	private DataConverter	dataConverter;
+
+	@Override
+	public void onApplicationEvent(ContextRefreshedEvent event) {
+		logger.info("Spring容器初始化完成 开始执行转换程序.");
+		Calendar targetCalendar = Calendar.getInstance();
+		targetCalendar.add(Calendar.MONTH, -2);
+		Date start = targetCalendar.getTime();
+		Date current = Calendar.getInstance().getTime();
+		logger.debug("解析数据的开始日期为：" + start + "; 结束日期为：" + current);
+		dataConverter.parser(start, current);
+	}
+
+}
